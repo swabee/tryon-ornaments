@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virtual Jewelry Try-On</title>
+  <style>
+    :root {
+      --primary-color: #6a5acd;
+      --secondary-color: #9370db;
+      --light-color: #f8f9fa;
+      --dark-color: #343a40;
+      --success-color: #28a745;
+      --error-color: #dc3545;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      background-color: #f5f5f5;
+      color: var(--dark-color);
+      padding: 20px;
+    }
+    
+    .main-container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    .app-container {
+      background-color: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      color: var(--primary-color);
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 2.2rem;
+    }
+    
+    .app-description {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #666;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .form-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+    
+    .form-column {
+      flex: 1;
+      min-width: 300px;
+    }
+    
+    .form-group {
+      margin-bottom: 25px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #555;
+    }
+    
+    .required-field::after {
+      content: " *";
+      color: var(--error-color);
+    }
+    
+    select, input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background-color: var(--light-color);
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    
+    select:focus, input[type="file"]:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+    
+    .preview-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin: 30px 0;
+    }
+    
+    .preview-box {
+      flex: 1;
+      min-width: 280px;
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      min-height: 250px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.3s;
+      background-color: #fafafa;
+    }
+    
+    .preview-box.active {
+      border-color: var(--primary-color);
+    }
+    
+    .preview-box-title {
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #666;
+    }
+    
+    .preview-box img {
+      max-width: 100%;
+      max-height: 300px;
+      object-fit: contain;
+      border-radius: 4px;
+      display: none;
+    }
+    
+    .options-group {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 6px;
+    }
+    
+    .options-title {
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #555;
+    }
+    
+    .radio-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    
+    .radio-option {
+      display: flex;
+      align-items: center;
+    }
+    
+    .radio-option input[type="radio"] {
+      margin-right: 6px;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+    
+    .btn {
+      padding: 12px 25px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+      border: none;
+      flex: 1;
+      min-width: 200px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--secondary-color);
+      transform: translateY(-2px);
+    }
+    
+    .btn-secondary {
+      background-color: white;
+      color: var(--primary-color);
+      border: 2px solid var(--primary-color);
+    }
+    
+    .btn-secondary:hover {
+      background-color: #f0f0f0;
+    }
+    
+    .btn-success {
+      background-color: var(--success-color);
+      color: white;
+    }
+    
+    .btn-success:hover {
+      opacity: 0.9;
+    }
+    
+    .result-section {
+      margin-top: 40px;
+      display: none;
+    }
+    
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .result-title {
+      color: var(--primary-color);
+      font-size: 1.5rem;
+    }
+    
+    .result-image-container {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 15px;
+      background-color: #fafafa;
+      margin-bottom: 20px;
+      overflow: auto;
+      max-height: 70vh;
+    }
+    
+    #result-img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      border-radius: 4px;
+    }
+    
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      display: none;
+    }
+    
+    .spinner {
+      border: 5px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 5px solid var(--primary-color);
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      font-size: 1.2rem;
+      color: var(--dark-color);
+      font-weight: 600;
+    }
+    
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      width: 100%;
+    }
+    
+    .file-input-button {
+      padding: 12px;
+      background-color: var(--light-color);
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .file-input-button:hover {
+      background-color: #e9ecef;
+    }
+    
+    .file-input-button i {
+      font-size: 20px;
+      color: var(--primary-color);
+    }
+    
+    .file-input-wrapper input[type="file"] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    
+    .file-info {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #666;
+    }
+    
+    .dimension-info {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+    }
+    
+    .error-message {
+      color: var(--error-color);
+      margin-top: 5px;
+      font-size: 14px;
+      display: none;
+    }
+    
+    @media (max-width: 768px) {
+      .form-section {
+        flex-direction: column;
+      }
+      
+      .preview-container {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <div class="main-container">
+    <div class="app-container">
+      <h1>Virtual Jewelry Try-On</h1>
+      <p class="app-description">
+        Upload your photo and jewelry image to see how it looks on you. 
+        Our AI will perfectly align the jewelry with your features.
+      </p>
+      
+      <form id="upload-form">
+        <div class="form-section">
+          <div class="form-column">
+            <div class="form-group">
+              <label for="accessory-type" class="required-field">Jewelry Type</label>
+              <select id="accessory-type" required>
+                <option value="">-- Select jewelry type --</option>
+                <option value="earring">Earrings</option>
+                <option value="necklace">Necklace</option>
+                <option value="crown">Crown/Headpiece</option>
+                <option value="nose-ornament">Nose Ring/Stud</option>
+                <option value="bangle">Bangle/Bracelet</option>
+                <option value="ring">Ring</option>
+              </select>
+            </div>
+            
+            <div id="additional-options">
+              <!-- Dynamic options will appear here -->
+            </div>
+          </div>
+          
+          <div class="form-column">
+            <div class="form-group">
+              <label for="user-img" class="required-field">Your Photo</label>
+              <div class="file-input-wrapper">
+                <div class="file-input-button">
+                  <i class="fas fa-camera"></i>
+                  <span>Choose a photo</span>
+                </div>
+                <input type="file" id="user-img" name="file" accept="image/*" required>
+              </div>
+              <div class="file-info" id="user-file-info">No file selected</div>
+              <div class="error-message" id="user-img-error"></div>
+            </div>
+            
+            <div class="form-group">
+              <label for="accessory-img" class="required-field">Jewelry Image</label>
+              <div class="file-input-wrapper">
+                <div class="file-input-button">
+                  <i class="fas fa-gem"></i>
+                  <span>Choose jewelry image</span>
+                </div>
+                <input type="file" id="accessory-img" name="accessory_image_upload" accept="image/*" required>
+              </div>
+              <div class="file-info" id="accessory-file-info">No file selected</div>
+              <div class="error-message" id="accessory-img-error"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="preview-container">
+          <div class="preview-box" id="user-preview-box">
+            <div class="preview-box-title">Your Photo Preview</div>
+            <img id="user-preview" alt="Your photo preview">
+            <div class="dimension-info" id="user-dimensions"></div>
+          </div>
+          
+          <div class="preview-box" id="accessory-preview-box">
+            <div class="preview-box-title">Jewelry Preview</div>
+            <img id="accessory-preview" alt="Jewelry preview">
+            <div class="dimension-info" id="accessory-dimensions"></div>
+          </div>
+        </div>
+        
+        <div class="action-buttons">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-magic"></i> Try It On
+          </button>
+          <button type="reset" class="btn btn-secondary" id="reset-btn">
+            <i class="fas fa-redo"></i> Reset
+          </button>
+        </div>
+      </form>
+      
+      <div class="result-section" id="result-section">
+        <div class="result-header">
+          <h2 class="result-title">Your Virtual Try-On Result</h2>
+          <div class="file-info" id="result-dimensions"></div>
+        </div>
+        
+        <div class="result-image-container">
+          <img id="result-img" alt="Try-on result">
+        </div>
+        
+        <div class="action-buttons">
+          <button id="download-btn" class="btn btn-success">
+            <i class="fas fa-download"></i> Download Result
+          </button>
+          <button id="new-try-btn" class="btn btn-secondary">
+            <i class="fas fa-plus"></i> New Try-On
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Processing your virtual try-on...</div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const form = document.getElementById('upload-form');
+    const accessoryTypeSelect = document.getElementById('accessory-type');
+    const additionalOptionsDiv = document.getElementById('additional-options');
+    const userImgInput = document.getElementById('user-img');
+    const accessoryImgInput = document.getElementById('accessory-img');
+    const userPreview = document.getElementById('user-preview');
+    const accessoryPreview = document.getElementById('accessory-preview');
+    const userPreviewBox = document.getElementById('user-preview-box');
+    const accessoryPreviewBox = document.getElementById('accessory-preview-box');
+    const resultSection = document.getElementById('result-section');
+    const resultImg = document.getElementById('result-img');
+    const downloadBtn = document.getElementById('download-btn');
+    const newTryBtn = document.getElementById('new-try-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const userFileInfo = document.getElementById('user-file-info');
+    const accessoryFileInfo = document.getElementById('accessory-file-info');
+    const userDimensions = document.getElementById('user-dimensions');
+    const accessoryDimensions = document.getElementById('accessory-dimensions');
+    const resultDimensions = document.getElementById('result-dimensions');
+    const userImgError = document.getElementById('user-img-error');
+    const accessoryImgError = document.getElementById('accessory-img-error');
+
+    // Global variables
+    let resultImageUrl = null;
+    let currentAccessoryType = '';
+    
+    // Event Listeners
+    userImgInput.addEventListener('change', handleImageUpload.bind(null, 'user'));
+    accessoryImgInput.addEventListener('change', handleImageUpload.bind(null, 'accessory'));
+    accessoryTypeSelect.addEventListener('change', updateAdditionalOptions);
+    form.addEventListener('submit', handleFormSubmit);
+    downloadBtn.addEventListener('click', downloadResult);
+    newTryBtn.addEventListener('click', resetForm);
+    resetBtn.addEventListener('click', resetForm);
+    
+    // Functions
+    function handleImageUpload(type, e) {
+      const file = e.target.files[0];
+      const preview = type === 'user' ? userPreview : accessoryPreview;
+      const previewBox = type === 'user' ? userPreviewBox : accessoryPreviewBox;
+      const fileInfo = type === 'user' ? userFileInfo : accessoryFileInfo;
+      const dimensions = type === 'user' ? userDimensions : accessoryDimensions;
+      const errorElement = type === 'user' ? userImgError : accessoryImgError;
+      
+      // Reset previous state
+      errorElement.style.display = 'none';
+      
+      if (!file) return;
+      
+      // Validate file type
+      if (!file.type.match('image.*')) {
+        showError(errorElement, 'Please upload an image file (JPEG, PNG)');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showError(errorElement, 'File size should be less than 5MB');
+        return;
+      }
+      
+      const reader = new FileReader();
+      
+      reader.onload = function(event) {
+        preview.src = event.target.result;
+        preview.style.display = 'block';
+        previewBox.classList.add('active');
+        fileInfo.textContent = `${file.name} (${formatFileSize(file.size)})`;
+        
+        // Get and display image dimensions
+        const img = new Image();
+        img.onload = function() {
+          dimensions.textContent = `${img.naturalWidth} × ${img.naturalHeight} px`;
+        };
+        img.src = event.target.result;
+      };
+      
+      reader.readAsDataURL(file);
+    }
+    
+    function updateAdditionalOptions() {
+      const type = accessoryTypeSelect.value;
+      currentAccessoryType = type;
+      let optionsHTML = '';
+      
+      switch(type) {
+        case 'earring':
+          optionsHTML = `
+            <div class="options-group">
+              <div class="options-title">Earring Options</div>
+              <div class="radio-group">
+                <label class="radio-option">
+                  <input type="radio" name="side" value="left" checked>
+                  Left Ear
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="side" value="right">
+                  Right Ear
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="side" value="both">
+                  Both Ears
+                </label>
+              </div>
+            </div>
+          `;
+          break;
+          
+        case 'nose-ornament':
+          optionsHTML = `
+            <div class="options-group">
+              <div class="options-title">Nose Ornament Options</div>
+              <div class="radio-group">
+                <label class="radio-option">
+                  <input type="radio" name="side" value="left" checked>
+                  Left Nostril
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="side" value="right">
+                  Right Nostril
+                </label>
+              </div>
+            </div>
+          `;
+          break;
+          
+        case 'ring':
+          optionsHTML = `
+            <div class="options-group">
+              <div class="options-title">Ring Options</div>
+              <div class="radio-group">
+                <label class="radio-option">
+                  <input type="radio" name="finger" value="index" checked>
+                  Index Finger
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="finger" value="middle">
+                  Middle Finger
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="finger" value="ring">
+                  Ring Finger
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="finger" value="pinky">
+                  Pinky Finger
+                </label>
+              </div>
+            </div>
+          `;
+          break;
+          
+        default:
+          optionsHTML = '';
+      }
+      
+      additionalOptionsDiv.innerHTML = optionsHTML;
+    }
+    
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      
+      const userFile = userImgInput.files[0];
+      const accessoryFile = accessoryImgInput.files[0];
+      const accessoryType = accessoryTypeSelect.value;
+      
+      // Validate form
+      if (!userFile) {
+        showError(userImgError, 'Please upload your photo');
+        return;
+      }
+      
+      if (!accessoryFile) {
+        showError(accessoryImgError, 'Please upload jewelry image');
+        return;
+      }
+      
+      if (!accessoryType) {
+        alert('Please select jewelry type');
+        return;
+      }
+      
+      // Show loading overlay
+      loadingOverlay.style.display = 'flex';
+      resultSection.style.display = 'none';
+      
+      const formData = new FormData();
+      formData.append('file', userFile);
+      formData.append('accessory_image_upload', accessoryFile);
+      
+      // Add additional parameters based on accessory type
+      let endpoint = `/try-on/${accessoryType}`;
+      
+      if (accessoryType === 'earring' || accessoryType === 'nose-ornament') {
+        const side = document.querySelector('input[name="side"]:checked').value;
+        formData.append('side', side);
+      } else if (accessoryType === 'ring') {
+        const finger = document.querySelector('input[name="finger"]:checked').value;
+        formData.append('finger', finger);
+      }
+      
+      try {
+        const response = await fetch(`http://localhost:8000${endpoint}`, {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+        
+        const blob = await response.blob();
+        resultImageUrl = URL.createObjectURL(blob);
+        
+        // Display result with dimensions
+        const img = new Image();
+        img.onload = function() {
+          resultImg.src = resultImageUrl;
+          resultDimensions.textContent = `Result dimensions: ${img.naturalWidth} × ${img.naturalHeight} px`;
+          resultSection.style.display = 'block';
+          
+          // Scroll to result
+          resultSection.scrollIntoView({ behavior: 'smooth' });
+        };
+        img.src = resultImageUrl;
+        
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to process your request. Please try again.');
+      } finally {
+        loadingOverlay.style.display = 'none';
+      }
+    }
+    
+    function downloadResult() {
+      if (!resultImageUrl) return;
+      
+      const a = document.createElement('a');
+      a.href = resultImageUrl;
+      a.download = `jewelry-tryon-${currentAccessoryType}-${new Date().getTime()}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+    
+    function resetForm() {
+      form.reset();
+      userPreview.src = '';
+      userPreview.style.display = 'none';
+      accessoryPreview.src = '';
+      accessoryPreview.style.display = 'none';
+      userPreviewBox.classList.remove('active');
+      accessoryPreviewBox.classList.remove('active');
+      resultSection.style.display = 'none';
+      userFileInfo.textContent = 'No file selected';
+      accessoryFileInfo.textContent = 'No file selected';
+      userDimensions.textContent = '';
+      accessoryDimensions.textContent = '';
+      resultDimensions.textContent = '';
+      userImgError.style.display = 'none';
+      accessoryImgError.style.display = 'none';
+      
+      // Clear previous result URL if exists
+      if (resultImageUrl) {
+        URL.revokeObjectURL(resultImageUrl);
+        resultImageUrl = null;
+      }
+      
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    function showError(element, message) {
+      element.textContent = message;
+      element.style.display = 'block';
+    }
+    
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+    
+    // Initialize
+    updateAdditionalOptions();
+  </script>
+</body>
+</html>
